@@ -1,11 +1,13 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-#from database_ops import *
+import base64
 import pickle
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
+
+import joblib
 
 def main():
     st.title("Rossmann Pharmaceuticals Sales Prediction Dashboard")
@@ -57,7 +59,7 @@ def main():
 
         store_sales = df_store[['Sales']].values
 
-        scaler = StandardScaler()
+        scaler = joblib.load('std_scaler.pkl')
         y = scaler.fit_transform(store_sales)
 
         X = df_store.drop('Sales', axis = 1).values
@@ -90,13 +92,24 @@ def main():
             model_file = 'forest-2021-07-30-05-45-41-547423.sav'
             model = pickle.load(open(model_file, 'rb'))
             
-            store_id = 16
-            x = data[data['Store'] == store_id].values
+            x = data.sample(1000).values
             predicted_sales = model.predict(x)
 
             st.subheader('Sales Plot')
-            hist_values = np.histogram(predicted_sales, bins=50)[0]
+            hist_values = np.histogram(predicted_sales, bins=10)[0]
             st.bar_chart(hist_values)
+
+            st.subheader('Download Predicted Sales')
+            full_prediction = model.predict(data.values)
+
+            scaler = joblib.load('std_scaler.pkl')
+
+            result_df = pd.DataFrame(data = {'Id': range(1,len(full_prediction)+1), 'Sales': scaler.inverse_transform(full_prediction)})
+            csv  = result_df.to_csv(index=False)
+            b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
+            href = f'<a href="data:file/csv;base64,{b64}" download="PredictedSales.csv">Download csv file</a>'
+            st.markdown(href, unsafe_allow_html=True)
+
     
 if __name__ == "__main__":
     main()
