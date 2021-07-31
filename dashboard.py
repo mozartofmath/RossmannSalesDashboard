@@ -45,16 +45,16 @@ def main():
         hist_values = np.histogram(df_store['Sales'], bins=100)[0]
         st.bar_chart(hist_values)
 
-        st.subheader('Promotions')
+        st.subheader('Number of days where the store ran Promotions')
         hist_values = np.histogram(df_store['Promo'], bins=2)[0]
         st.bar_chart(hist_values)
 
-        st.subheader('Store Type')
-        hist_values = np.histogram(df_store['StoreType'], bins=4)[0]
+        st.subheader('Days the stores were Open')
+        hist_values = np.histogram(df_store['Open'], bins=2)[0]
         st.bar_chart(hist_values)
 
-        st.subheader('Assortment Level of Stores')
-        hist_values = np.histogram(df_store['Assortment'], bins=3)[0]
+        st.subheader('Distribution of data by day of week')
+        hist_values = np.histogram(df_store['DayOfWeek'], bins=7)[0]
         st.bar_chart(hist_values)
 
         store_sales = df_store[['Sales']].values
@@ -96,7 +96,7 @@ def main():
             predicted_sales = model.predict(x)
 
             st.subheader('Sales Plot')
-            hist_values = np.histogram(predicted_sales, bins=10)[0]
+            hist_values = np.histogram(predicted_sales, bins=100)[0]
             st.bar_chart(hist_values)
 
             st.subheader('Download Predicted Sales')
