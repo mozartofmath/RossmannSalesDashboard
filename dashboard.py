@@ -36,14 +36,10 @@ def main():
 
         #Select the Sales data of a specific store
         store_id = 16
-        df_store = df[df['Store'] == store_id].sample(300)
+        df_store = df[df['Store'] == store_id].head(100)
 
         st.subheader('Some Statistics on the data')
-        st.table(df_store.describe())
-
-        st.subheader('Sales Figures')
-        hist_values = np.histogram(df_store['Sales'], bins=100)[0]
-        st.bar_chart(hist_values)
+        st.table(df_store.describe().T)
 
         st.subheader('Number of days where the store ran Promotions')
         hist_values = np.histogram(df_store['Promo'], bins=2)[0]
@@ -66,6 +62,11 @@ def main():
 
         score = model.score(X, y)
         mse = mean_squared_error(y, model.predict(X))
+
+        st.subheader('Real Sales vs Predicted Sales')
+        plot_df = pd.DataFrame(data = {'Sales': y.reshape((100,)), 'Predicted' : model.predict(X)})
+        st.line_chart(plot_df)
+
         st.subheader(f'Model performance on the sales data for store: {store_id}')
 
         st.write(f'Model r2 Score: {score}')
@@ -87,22 +88,24 @@ def main():
             st.table(data.tail(5))
 
             st.subheader('Some Statistics on the data')
-            st.table(data.describe())
+            st.table(data.describe().T)
 
             model_file = 'forest-2021-07-30-05-45-41-547423.sav'
             model = pickle.load(open(model_file, 'rb'))
             
-            x = data.sample(1000).values
+            x = data.sample(100).values
             predicted_sales = model.predict(x)
 
-            st.subheader('Sales Plot')
-            hist_values = np.histogram(predicted_sales, bins=100)[0]
-            st.bar_chart(hist_values)
+            scaler = joblib.load('std_scaler.pkl')
+
+            st.subheader('Predicted Sales Plot')
+            plot_df = pd.DataFrame(data = {'Sales': scaler.inverse_transform(predicted_sales)})
+            st.line_chart(plot_df)
 
             st.subheader('Download Predicted Sales')
             full_prediction = model.predict(data.values)
 
-            scaler = joblib.load('std_scaler.pkl')
+            
 
             result_df = pd.DataFrame(data = {'Id': range(1,len(full_prediction)+1), 'Sales': scaler.inverse_transform(full_prediction)})
             csv  = result_df.to_csv(index=False)
