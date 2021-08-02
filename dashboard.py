@@ -7,6 +7,8 @@ import pickle
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
 
+from data_cleaner import clean_data
+
 import joblib
 
 def main():
@@ -79,7 +81,7 @@ def main():
         csv_file =  st.file_uploader("Upload Data", type = ['csv'])
         if csv_file is not None:
             data = pd.read_csv(csv_file, na_values=['?', None, 'undefined'])
-
+            data = clean_data(data)
             data = data.reindex(index=data.index[::-1])
             st.subheader('First 5 rows')
             st.table(data.head(5))
@@ -93,12 +95,12 @@ def main():
             model_file = 'forest-2021-07-30-05-45-41-547423.sav'
             model = pickle.load(open(model_file, 'rb'))
             
-            x = data.sample(100).values
+            x = data[data['Store'] == min(data['Store'])].values
             predicted_sales = model.predict(x)
 
             scaler = joblib.load('std_scaler.pkl')
 
-            st.subheader('Predicted Sales Plot')
+            st.subheader('Predicted Sales Plot for the first Store')
             plot_df = pd.DataFrame(data = {'Sales': scaler.inverse_transform(predicted_sales)})
             st.line_chart(plot_df)
 
